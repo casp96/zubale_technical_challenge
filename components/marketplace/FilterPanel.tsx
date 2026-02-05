@@ -20,7 +20,7 @@ import Animated, {
     runOnJS,
     useAnimatedStyle,
     useSharedValue,
-    withSpring
+    withTiming
 } from 'react-native-reanimated';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -46,9 +46,8 @@ export function FilterPanel({ isOpen, onClose }: FilterPanelProps) {
     const translateY = useSharedValue(PANEL_HEIGHT);
 
     React.useEffect(() => {
-        translateY.value = withSpring(isOpen ? 0 : PANEL_HEIGHT, {
-            damping: 20,
-            stiffness: 200,
+        translateY.value = withTiming(isOpen ? 0 : PANEL_HEIGHT, {
+            duration: 300,
         });
     }, [isOpen]);
 
@@ -75,10 +74,10 @@ export function FilterPanel({ isOpen, onClose }: FilterPanelProps) {
         })
         .onEnd((event) => {
             if (event.translationY > 100 || event.velocityY > 500) {
-                translateY.value = withSpring(PANEL_HEIGHT);
+                translateY.value = withTiming(PANEL_HEIGHT, { duration: 200 });
                 runOnJS(onClose)();
             } else {
-                translateY.value = withSpring(0);
+                translateY.value = withTiming(0, { duration: 200 });
             }
         });
 

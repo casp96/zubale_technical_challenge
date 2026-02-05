@@ -3,7 +3,6 @@ import {
     DEFAULT_FILTERS,
     FilterState,
     MarketplaceItem,
-    SortOption,
     ViewMode
 } from '@/types/types';
 import { loadFilters, loadViewMode, saveFilters, saveViewMode } from '@/utils/storage';
@@ -12,11 +11,13 @@ import { create } from 'zustand';
 interface MarketplaceStore {
     // Data
     items: MarketplaceItem[];
+    cart: MarketplaceItem[]; // Cart items
     isLoading: boolean;
 
     // Filters
     filters: FilterState;
     isFilterPanelOpen: boolean;
+    isCartOpen: boolean; // Slider visibility
 
     // View
     viewMode: ViewMode;
@@ -27,10 +28,18 @@ interface MarketplaceStore {
     resetFilters: () => void;
     toggleFilterPanel: () => void;
     setFilterPanelOpen: (open: boolean) => void;
+
+    // Cart Actions
+    toggleCart: () => void;
+    addToCart: (item: MarketplaceItem) => void;
+    removeFromCart: (itemId: string) => void;
+    clearCart: () => void;
+
     setViewMode: (mode: ViewMode) => void;
 
     // Computed (using selectors)
     getFilteredItems: () => MarketplaceItem[];
+    getCartTotal: () => number;
 }
 
 // Filtering function - optimized for performance
@@ -78,7 +87,7 @@ function filterItems(items: MarketplaceItem[], filters: FilterState): Marketplac
     return result;
 }
 
-function sortItems(items: MarketplaceItem[], sortBy: SortOption): MarketplaceItem[] {
+function sortItems(items: MarketplaceItem[], sortBy: import('@/types/types').SortOption): MarketplaceItem[] {
     const sorted = [...items];
 
     switch (sortBy) {
@@ -91,9 +100,8 @@ function sortItems(items: MarketplaceItem[], sortBy: SortOption): MarketplaceIte
         case 'rating':
             return sorted.sort((a, b) => b.rating - a.rating);
         case 'recent':
-            return sorted.sort((a, b) =>
-                new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
-            );
+            const timeA = (d: string) => new Date(d).getTime();
+            return sorted.sort((a, b) => timeA(b.postedAt) - timeA(a.postedAt));
         default:
             return sorted;
     }
@@ -103,10 +111,12 @@ function sortItems(items: MarketplaceItem[], sortBy: SortOption): MarketplaceIte
 export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
     // Initial state
     items: [],
+    cart: [],
     isLoading: true,
     filters: DEFAULT_FILTERS,
     isFilterPanelOpen: false,
-    viewMode: 'list',
+    isCartOpen: false,
+    viewMode: 'masonry',
 
     // Initialize store with data
     initializeStore: () => {
@@ -153,6 +163,28 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
         set({ isFilterPanelOpen: open });
     },
 
+    // Cart Actions
+    toggleCart: () => {
+        set(state => ({ isCartOpen: !state.isCartOpen }));
+    },
+
+    addToCart: (item) => {
+        set(state => ({
+            cart: [...state.cart, item],
+            isCartOpen: true // Auto open cart when adding
+        }));
+    },
+
+    removeFromCart: (itemId) => {
+        set(state => ({
+            cart: state.cart.filter(i => i.id !== itemId)
+        }));
+    },
+
+    clearCart: () => {
+        set({ cart: [] });
+    },
+
     setViewMode: (mode) => {
         saveViewMode(mode);
         set({ viewMode: mode });
@@ -163,7 +195,13 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
         const { items, filters } = get();
         return filterItems(items, filters);
     },
+
+    getCartTotal: () => {
+        const { cart } = get();
+        return cart.reduce((total, item) => total + item.price, 0);
+    }
 }));
+
 
 // Selector hooks for optimized re-renders
 export const useFilteredItems = () => {

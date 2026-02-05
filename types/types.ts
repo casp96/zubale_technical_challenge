@@ -13,27 +13,28 @@ export interface MarketplaceItem {
   postedAt: string;
   urgent: boolean;
   featured: boolean;
+  technicalDetails?: Record<string, string>; // New field for product details
 }
 
-export type Category = 
-  | 'food_delivery'
-  | 'shopping'
-  | 'warehouse'
-  | 'cleaning'
-  | 'surveys'
-  | 'delivery'
-  | 'driving'
-  | 'tech';
+export type Category =
+  | 'electronics'
+  | 'clothing'
+  | 'home'
+  | 'beauty'
+  | 'toys'
+  | 'sports'
+  | 'books'
+  | 'automotive';
 
 export const CATEGORIES: { key: Category; label: string; icon: string; color: string }[] = [
-  { key: 'food_delivery', label: 'Food Delivery', icon: '🍔', color: '#FF6B6B' },
-  { key: 'shopping', label: 'Shopping', icon: '🛒', color: '#4ECDC4' },
-  { key: 'warehouse', label: 'Warehouse', icon: '📦', color: '#FFE66D' },
-  { key: 'cleaning', label: 'Cleaning', icon: '🧹', color: '#95E1D3' },
-  { key: 'surveys', label: 'Surveys', icon: '📋', color: '#DDA0DD' },
-  { key: 'delivery', label: 'Delivery', icon: '🚚', color: '#87CEEB' },
-  { key: 'driving', label: 'Driving', icon: '🚗', color: '#F0E68C' },
-  { key: 'tech', label: 'Tech Support', icon: '💻', color: '#B8B8FF' },
+  { key: 'electronics', label: 'Electrónica', icon: '📱', color: '#3B82F6' },
+  { key: 'clothing', label: 'Ropa', icon: '👕', color: '#EC4899' },
+  { key: 'home', label: 'Hogar', icon: '🏠', color: '#10B981' },
+  { key: 'beauty', label: 'Belleza', icon: '💄', color: '#F59E0B' },
+  { key: 'toys', label: 'Juguetes', icon: '🎮', color: '#8B5CF6' },
+  { key: 'sports', label: 'Deportes', icon: '⚽', color: '#EF4444' },
+  { key: 'books', label: 'Libros', icon: '📚', color: '#6366F1' },
+  { key: 'automotive', label: 'Autos', icon: '🚗', color: '#6B7280' },
 ];
 
 // Filter State

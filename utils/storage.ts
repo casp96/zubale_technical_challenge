@@ -61,7 +61,7 @@ export function saveViewMode(mode: ViewMode): void {
 }
 
 export function loadViewMode(): ViewMode {
-  return (storage.getString(KEYS.VIEW_MODE) as ViewMode) || 'list';
+  return (storage.getString(KEYS.VIEW_MODE) as ViewMode) || 'masonry';
 }
 
 // Favorites management

@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
+import { CartDrawer } from '@/components/marketplace/CartDrawer';
 import { theme } from '@/constants/theme';
 
 export {
@@ -73,12 +74,13 @@ export default function RootLayout() {
             name="detail/[id]"
             options={{
               headerShown: false,
-              animation: 'fade_from_bottom',
+              animation: 'slide_from_bottom',
               gestureEnabled: true,
             }}
           />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         </Stack>
+        <CartDrawer />
       </ThemeProvider>
     </GestureHandlerRootView>
   );

@@ -1,5 +1,6 @@
 import { categoryColors, theme } from '@/constants/theme';
 import { getItemById } from '@/data/mockData';
+import { useMarketplaceStore } from '@/store/store';
 import { CATEGORIES } from '@/types/types';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Image } from 'expo-image';
@@ -31,6 +32,7 @@ export default function DetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const insets = useSafeAreaInsets();
     const scrollY = useSharedValue(0);
+    const { addToCart } = useMarketplaceStore();
 
     const item = getItemById(id || '');
 
@@ -188,7 +190,7 @@ export default function DetailScreen() {
                     <View style={styles.statsRow}>
                         <View style={styles.statItem}>
                             <Text style={styles.statValue}>${item.price.toFixed(0)}</Text>
-                            <Text style={styles.statLabel}>Pago</Text>
+                            <Text style={styles.statLabel}>Precio</Text>
                         </View>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
@@ -211,38 +213,41 @@ export default function DetailScreen() {
                     {/* Description */}
                     <Text style={styles.sectionTitle}>Descripción</Text>
                     <Text style={styles.description}>{item.description}</Text>
-                    <Text style={styles.description}>
-                        Esta es una excelente oportunidad para ganar dinero extra de forma flexible.
-                        Trabajarás en tu propio horario y recibirás pagos semanales directamente a tu cuenta.
-                    </Text>
 
-                    {/* Requirements */}
-                    <Text style={styles.sectionTitle}>Requisitos</Text>
-                    <View style={styles.requirementsList}>
-                        {[
-                            '📱 Smartphone con datos móviles',
-                            '🪪 Identificación oficial',
-                            '🚗 Medio de transporte (opcional)',
-                            '✅ Mayor de 18 años',
-                        ].map((req, index) => (
-                            <View key={index} style={styles.requirementItem}>
-                                <Text style={styles.requirementText}>{req}</Text>
+                    {/* Technical Details */}
+                    {item.technicalDetails && (
+                        <>
+                            <Text style={styles.sectionTitle}>Ficha Técnica</Text>
+                            <View style={styles.specsContainer}>
+                                {Object.entries(item.technicalDetails).map(([key, value], index) => (
+                                    <View key={key} style={[
+                                        styles.specRow,
+                                        index % 2 === 0 && styles.specRowAlt
+                                    ]}>
+                                        <Text style={styles.specLabel}>{key}</Text>
+                                        <Text style={styles.specValue}>{value}</Text>
+                                    </View>
+                                ))}
                             </View>
-                        ))}
-                    </View>
+                            <View style={styles.divider} />
+                        </>
+                    )}
 
-                    {/* Benefits */}
-                    <Text style={styles.sectionTitle}>Beneficios</Text>
+                    {/* Shipping & Delivery (Replacing Benefits) */}
+                    <Text style={styles.sectionTitle}>Envío y Entrega</Text>
                     <View style={styles.benefitsGrid}>
                         {[
-                            { icon: '💰', label: 'Pagos semanales' },
-                            { icon: '⏰', label: 'Horario flexible' },
-                            { icon: '📈', label: 'Bonos extra' },
-                            { icon: '🎓', label: 'Capacitación gratis' },
+                            { icon: '🚚', label: 'Envío Gratis', sub: 'En pedidos > $500' },
+                            { icon: '🛡️', label: 'Garantía', sub: '30 días de devolución' },
+                            { icon: '⚡', label: 'Entrega Full', sub: 'Llega mañana' },
+                            { icon: '💳', label: 'Meses sin intereses', sub: 'Hasta 12 meses' },
                         ].map((benefit, index) => (
                             <View key={index} style={styles.benefitItem}>
                                 <Text style={styles.benefitIcon}>{benefit.icon}</Text>
-                                <Text style={styles.benefitLabel}>{benefit.label}</Text>
+                                <View>
+                                    <Text style={styles.benefitLabel}>{benefit.label}</Text>
+                                    <Text style={styles.benefitSub}>{benefit.sub}</Text>
+                                </View>
                             </View>
                         ))}
                     </View>
@@ -260,11 +265,14 @@ export default function DetailScreen() {
                 <View style={styles.ctaContent}>
                     <View>
                         <Text style={styles.ctaPrice}>${item.price.toFixed(0)}</Text>
-                        <Text style={styles.ctaSubtext}>por tarea</Text>
+                        <Text style={styles.ctaSubtext}>Mejor precio garantizado</Text>
                     </View>
-                    <Pressable style={styles.ctaButton}>
-                        <Text style={styles.ctaButtonText}>Aplicar ahora</Text>
-                        <FontAwesome name="arrow-right" size={16} color={theme.colors.text.primary} />
+                    <Pressable
+                        style={styles.ctaButton}
+                        onPress={() => addToCart(item)}
+                    >
+                        <Text style={styles.ctaButtonText}>Comprar Ahora</Text>
+                        <FontAwesome name="shopping-cart" size={16} color={theme.colors.text.primary} />
                     </Pressable>
                 </View>
             </Animated.View>
@@ -480,9 +488,42 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.sm,
     },
     benefitLabel: {
+        color: theme.colors.text.primary,
+        fontSize: theme.typography.sizes.sm,
+        fontWeight: theme.typography.weights.semibold,
+    },
+    benefitSub: {
+        color: theme.colors.text.tertiary,
+        fontSize: 10,
+    },
+    specsContainer: {
+        backgroundColor: theme.colors.background.tertiary,
+        borderRadius: theme.borderRadius.lg,
+        overflow: 'hidden',
+        marginBottom: theme.spacing.xl,
+        borderWidth: 1,
+        borderColor: theme.colors.border.subtle,
+    },
+    specRow: {
+        flexDirection: 'row',
+        padding: theme.spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.border.subtle,
+    },
+    specRowAlt: {
+        backgroundColor: theme.colors.background.secondary,
+    },
+    specLabel: {
+        flex: 1,
         color: theme.colors.text.secondary,
         fontSize: theme.typography.sizes.sm,
-        textAlign: 'center',
+        fontWeight: theme.typography.weights.medium,
+    },
+    specValue: {
+        flex: 1.5,
+        color: theme.colors.text.primary,
+        fontSize: theme.typography.sizes.sm,
+        textAlign: 'right',
     },
     ctaFooter: {
         position: 'absolute',

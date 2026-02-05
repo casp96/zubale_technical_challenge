@@ -94,17 +94,8 @@ export function Header({ scrollY, itemCount, onFilterPress }: HeaderProps) {
                     </Text>
                 </Animated.View>
 
-                {/* View Mode Toggle */}
-                <Pressable
-                    style={styles.viewModeButton}
-                    onPress={toggleViewMode}
-                >
-                    <FontAwesome
-                        name={viewMode === 'list' ? 'th-large' : 'list'}
-                        size={18}
-                        color={theme.colors.text.primary}
-                    />
-                </Pressable>
+                {/* Cart Button */}
+                <CartButton />
             </View>
 
             {/* Search Row */}
@@ -152,10 +143,47 @@ export function Header({ scrollY, itemCount, onFilterPress }: HeaderProps) {
                         </View>
                     )}
                 </Pressable>
+
+                {/* View Mode Toggle */}
+                <Pressable
+                    style={styles.filterButton}
+                    onPress={toggleViewMode}
+                >
+                    <FontAwesome
+                        name={viewMode === 'list' ? 'th-large' : 'list'}
+                        size={18}
+                        color={theme.colors.text.primary}
+                    />
+                </Pressable>
             </View>
         </Animated.View>
     );
 }
+
+// Separated component to avoid re-rendering entire header when cart changes
+function CartButton() {
+    const { cart, toggleCart } = useMarketplaceStore();
+    const count = cart.length;
+
+    return (
+        <Pressable
+            style={styles.cartButton}
+            onPress={toggleCart}
+        >
+            <FontAwesome
+                name="shopping-cart"
+                size={24}
+                color={theme.colors.text.primary}
+            />
+            {count > 0 && (
+                <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>{count}</Text>
+                </View>
+            )}
+        </Pressable>
+    );
+}
+
 
 const styles = StyleSheet.create({
     container: {
@@ -237,5 +265,12 @@ const styles = StyleSheet.create({
         color: theme.colors.text.inverse,
         fontSize: 10,
         fontWeight: theme.typography.weights.bold,
+    },
+    cartButton: {
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
     },
 });
