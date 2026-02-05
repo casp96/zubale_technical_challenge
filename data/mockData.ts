@@ -1,7 +1,6 @@
 import { CATEGORIES, Category, MarketplaceItem } from '@/types/types';
 
 // Original efficient data generation logic
-// Original efficient data generation logic
 const titles: Record<Category, string[]> = {
     electronics: ['iPhone 15 Pro', 'Samsung Galaxy S24', 'MacBook Air M2', 'Sony WH-1000XM5', 'iPad Air 5', 'Nintendo Switch OLED', 'Dell XPS 13', 'AirPods Pro'],
     clothing: ['Camiseta Algodón Premium', 'Jeans Slim Fit', 'Chamarra de Cuero', 'Vestido Floral Verano', 'Tenis Deportivos Running', 'Sudadera con Capucha', 'Traje Formal Azul'],
@@ -121,7 +120,7 @@ function generateItem(index: number): MarketplaceItem {
         reviewCount: reviews,
         location: locations[index % CACHED_LOCATIONS_LENGTH],
         postedAt: date.toISOString(),
-        urgent: index % 19 === 0, // "Oferta Flash" maybe?
+        urgent: index % 19 === 0, // "Oferta Flash"
         featured: index % 29 === 0,
         technicalDetails: specs,
     };

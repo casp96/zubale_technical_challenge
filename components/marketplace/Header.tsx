@@ -24,44 +24,122 @@ interface HeaderProps {
     onFilterPress: () => void;
 }
 
+export const HEADER_MAX_HEIGHT = 160;
+export const HEADER_MIN_HEIGHT = 72;
+
 export function Header({ scrollY, itemCount, onFilterPress }: HeaderProps) {
     const insets = useSafeAreaInsets();
     const filters = useFilters();
     const viewMode = useViewMode();
     const { setFilters, setViewMode } = useMarketplaceStore();
 
-    // Animated header background
+    // Animated header background & bottom border
     const headerStyle = useAnimatedStyle(() => {
-        const opacity = interpolate(
+        const bgOpacity = interpolate(
+            scrollY.value,
+            [0, 80],
+            [0, 0.98],
+            Extrapolation.CLAMP
+        );
+
+        const borderOpacity = interpolate(
+            scrollY.value,
+            [80, 120],
+            [0, 0.15],
+            Extrapolation.CLAMP
+        );
+
+        const height = interpolate(
             scrollY.value,
             [0, 100],
-            [0, 1],
+            [HEADER_MAX_HEIGHT + insets.top, HEADER_MIN_HEIGHT + insets.top],
             Extrapolation.CLAMP
         );
 
         return {
-            backgroundColor: `rgba(10, 10, 15, ${opacity * 0.95})`,
+            backgroundColor: `rgba(10, 10, 15, ${bgOpacity})`,
+            borderBottomColor: `rgba(255, 255, 255, ${borderOpacity})`,
+            height,
+            zIndex: 1000,
         };
     });
 
-    // Animated title scale
-    const titleStyle = useAnimatedStyle(() => {
-        const scale = interpolate(
+    // Animate the entire Logo/Title Row collapse
+    const titleRowStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(
             scrollY.value,
-            [0, 100],
-            [1, 0.9],
+            [0, 50],
+            [1, 0],
             Extrapolation.CLAMP
         );
 
         const translateY = interpolate(
             scrollY.value,
             [0, 100],
-            [0, -4],
+            [0, -40],
+            Extrapolation.CLAMP
+        );
+
+        const scale = interpolate(
+            scrollY.value,
+            [0, 100],
+            [1, 0.8],
             Extrapolation.CLAMP
         );
 
         return {
-            transform: [{ scale }, { translateY }],
+            opacity,
+            transform: [
+                { translateY },
+                { scale }
+            ],
+            position: 'absolute',
+            top: insets.top + theme.spacing.md,
+            left: theme.spacing.lg,
+            right: theme.spacing.lg,
+        };
+    });
+
+    // Search Row (Always Sticky, slides up to clear logo)
+    const searchRowStyle = useAnimatedStyle(() => {
+        const translateY = interpolate(
+            scrollY.value,
+            [0, 100],
+            [80, 8], // Land 8px below insets.top
+            Extrapolation.CLAMP
+        );
+
+        return {
+            transform: [{ translateY }],
+            position: 'absolute',
+            top: insets.top,
+            left: theme.spacing.lg,
+            right: theme.spacing.lg,
+        };
+    });
+
+    // Subtitle fade out on scroll
+    const subtitleStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(
+            scrollY.value,
+            [0, 50],
+            [1, 0],
+            Extrapolation.CLAMP
+        );
+
+        const translateY = interpolate(
+            scrollY.value,
+            [0, 80],
+            [130, 100],
+            Extrapolation.CLAMP
+        );
+
+        return {
+            opacity,
+            transform: [{ translateY }],
+            position: 'absolute',
+            top: insets.top,
+            left: theme.spacing.lg + 4,
         };
     });
 
@@ -85,23 +163,23 @@ export function Header({ scrollY, itemCount, onFilterPress }: HeaderProps) {
     }, [filters]);
 
     return (
-        <Animated.View style={[styles.container, { paddingTop: insets.top }, headerStyle]}>
-            {/* Title Row */}
-            <View style={styles.titleRow}>
-                <Animated.View style={titleStyle}>
-                    <Image
-                        source={require('@/assets/images/logo/logo_zubale_2023.png')}
-                        style={styles.logo}
-                        contentFit="contain"
-                    />
-                </Animated.View>
+        <Animated.View style={[styles.container, headerStyle]}>
+            {/* Title Row (Collapsible) */}
+            <Animated.View style={[styles.titleRow, titleRowStyle]}>
+                <Image
+                    source={require('@/assets/images/logo/logo_zubale_2023.png')}
+                    style={styles.logo}
+                    contentFit="contain"
+                />
+            </Animated.View>
 
-                {/* Cart Button */}
-                <CartButton />
-            </View>
+            {/* Subtitle (Fades out) */}
+            <Animated.Text style={[styles.subtitle, { marginLeft: 4 }, subtitleStyle]}>
+                {itemCount.toLocaleString()} productos disponibles
+            </Animated.Text>
 
-            {/* Search Row */}
-            <View style={styles.searchRow}>
+            {/* Search + Controls Row (Slides up) */}
+            <Animated.View style={[styles.searchRow, searchRowStyle]}>
                 {/* Search Input */}
                 <View style={styles.searchContainer}>
                     <FontAwesome
@@ -157,52 +235,69 @@ export function Header({ scrollY, itemCount, onFilterPress }: HeaderProps) {
                         color={theme.colors.text.primary}
                     />
                 </Pressable>
-            </View>
 
-            <Text style={[styles.subtitle, { marginLeft: 4, marginTop: 8 }]}>
-                {itemCount.toLocaleString()} productos disponibles
-            </Text>
+                {/* Cart Button (Always visible) */}
+                <CartButton scrollY={scrollY} />
+            </Animated.View>
         </Animated.View>
     );
 }
 
 // Separated component to avoid re-rendering entire header when cart changes
-function CartButton() {
+function CartButton({ scrollY }: { scrollY: SharedValue<number> }) {
     const { cart, toggleCart } = useMarketplaceStore();
     const count = cart.reduce((acc, i) => acc + i.quantity, 0);
 
+    const cartAnimationStyle = useAnimatedStyle(() => {
+        const translateY = interpolate(
+            scrollY.value,
+            [0, 100],
+            [-68, 0],
+            Extrapolation.CLAMP
+        );
+
+        return {
+            transform: [{ translateY }],
+        };
+    });
+
     return (
-        <Pressable
-            style={styles.cartButton}
-            onPress={toggleCart}
-        >
-            <FontAwesome
-                name="shopping-cart"
-                size={24}
-                color={theme.colors.text.primary}
-            />
-            {count > 0 && (
-                <View style={styles.filterBadge}>
-                    <Text style={styles.filterBadgeText}>{count}</Text>
-                </View>
-            )}
-        </Pressable>
+        <Animated.View style={cartAnimationStyle}>
+            <Pressable
+                style={styles.cartButtonGrid}
+                onPress={toggleCart}
+            >
+                <FontAwesome
+                    name="shopping-cart"
+                    size={22}
+                    color={theme.colors.text.primary}
+                />
+                {count > 0 && (
+                    <View style={styles.cartBadgeSmall}>
+                        <Text style={styles.filterBadgeText}>{count}</Text>
+                    </View>
+                )}
+            </Pressable>
+        </Animated.View>
     );
 }
 
 
 const styles = StyleSheet.create({
     container: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         paddingHorizontal: theme.spacing.lg,
-        paddingBottom: theme.spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: theme.colors.border.subtle,
+        borderBottomColor: 'transparent',
     },
     titleRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: theme.spacing.md,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
     },
     logo: {
         width: 140,
@@ -217,7 +312,6 @@ const styles = StyleSheet.create({
     subtitle: {
         color: theme.colors.text.tertiary,
         fontSize: theme.typography.sizes.sm,
-        marginTop: theme.spacing.xs,
     },
     viewModeButton: {
         width: 44,
@@ -232,6 +326,7 @@ const styles = StyleSheet.create({
     searchRow: {
         flexDirection: 'row',
         gap: theme.spacing.sm,
+        alignItems: 'center',
     },
     searchContainer: {
         flex: 1,
@@ -277,11 +372,26 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: theme.typography.weights.bold,
     },
-    cartButton: {
+    cartButtonGrid: {
         width: 44,
         height: 44,
+        borderRadius: theme.borderRadius.lg,
+        backgroundColor: theme.colors.background.tertiary,
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
+        borderWidth: 1,
+        borderColor: theme.colors.border.default,
+    },
+    cartBadgeSmall: {
+        position: 'absolute',
+        top: -4,
+        right: -4,
+        backgroundColor: theme.colors.accent.secondary,
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

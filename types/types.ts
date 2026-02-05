@@ -13,7 +13,7 @@ export interface MarketplaceItem {
   postedAt: string;
   urgent: boolean;
   featured: boolean;
-  technicalDetails?: Record<string, string>; // New field for product details
+  technicalDetails?: Record<string, string>;
 }
 
 export interface CartItem {

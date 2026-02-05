@@ -1,5 +1,5 @@
 import { FilterPanel } from '@/components/marketplace/FilterPanel';
-import { Header } from '@/components/marketplace/Header';
+import { Header, HEADER_MAX_HEIGHT } from '@/components/marketplace/Header';
 import { ItemCard } from '@/components/marketplace/ItemCard';
 import { MasonryList } from '@/components/marketplace/MasonryList';
 import { LoadingScreen } from '@/components/ui/Skeleton';
@@ -41,6 +41,9 @@ export default function MarketplaceScreen() {
 
   const scrollY = useSharedValue(0);
   const [refreshing, setRefreshing] = React.useState(false);
+
+  // Added constant for total top offset to accommodate absolute header
+  const LIST_PADDING_TOP = HEADER_MAX_HEIGHT + insets.top;
 
   // Initialize store on mount
   useEffect(() => {
@@ -101,7 +104,7 @@ export default function MarketplaceScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Sticky Header */}
+      {/* Header is absolute, rendered here for zIndex visibility */}
       <Header
         scrollY={scrollY}
         itemCount={filteredItems.length}
@@ -119,7 +122,10 @@ export default function MarketplaceScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.listContent,
-            { paddingBottom: insets.bottom + theme.spacing.xl },
+            {
+              paddingTop: LIST_PADDING_TOP + theme.spacing.md,
+              paddingBottom: insets.bottom + theme.spacing.xl
+            },
           ]}
           refreshControl={
             <RefreshControl
@@ -142,6 +148,7 @@ export default function MarketplaceScreen() {
           refreshing={refreshing}
           onRefresh={onRefresh}
           scrollY={scrollY}
+          paddingTop={LIST_PADDING_TOP}
         />
       )}
 
@@ -160,6 +167,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.primary,
   },
   listContent: {
-    paddingTop: theme.spacing.md,
+    // Top padding handled dynamically via contentContainerStyle
   },
 });
