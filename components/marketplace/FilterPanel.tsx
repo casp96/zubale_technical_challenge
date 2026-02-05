@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     backdrop: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: theme.colors.overlay,
-        zIndex: 100,
+        zIndex: 2000,
     },
     panel: {
         position: 'absolute',
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.background.secondary,
         borderTopLeftRadius: theme.borderRadius['2xl'],
         borderTopRightRadius: theme.borderRadius['2xl'],
-        zIndex: 101,
+        zIndex: 2001,
     },
     handleContainer: {
         alignItems: 'center',

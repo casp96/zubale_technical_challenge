@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     // ... existing styles ...
     backdrop: {
         ...StyleSheet.absoluteFillObject,
-        zIndex: 1000,
+        zIndex: 2000,
     },
     backdropFill: {
         flex: 1,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
         right: 0,
         width: DRAWER_WIDTH,
         backgroundColor: theme.colors.background.secondary,
-        zIndex: 1001,
+        zIndex: 2001,
         borderLeftWidth: 1,
         borderLeftColor: theme.colors.border.subtle,
         shadowColor: "#000",
