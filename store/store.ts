@@ -5,7 +5,14 @@ import {
     MarketplaceItem,
     ViewMode
 } from '@/types/types';
-import { loadFilters, loadViewMode, saveFilters, saveViewMode } from '@/utils/storage';
+import {
+    getFavorites,
+    loadFilters,
+    loadViewMode,
+    saveFilters,
+    saveViewMode,
+    storage
+} from '@/utils/storage';
 import { create } from 'zustand';
 
 interface MarketplaceStore {
@@ -21,6 +28,7 @@ interface MarketplaceStore {
 
     // View
     viewMode: ViewMode;
+    favorites: string[]; // Favorite product IDs
 
     // Actions
     initializeStore: () => void;
@@ -34,6 +42,9 @@ interface MarketplaceStore {
     addToCart: (item: MarketplaceItem) => void;
     removeFromCart: (itemId: string) => void;
     clearCart: () => void;
+
+    // Favorite Actions
+    toggleFavorite: (productId: string) => void;
 
     setViewMode: (mode: ViewMode) => void;
 
@@ -117,6 +128,7 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
     isFilterPanelOpen: false,
     isCartOpen: false,
     viewMode: 'masonry',
+    favorites: [],
 
     // Initialize store with data
     initializeStore: () => {
@@ -128,11 +140,13 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
             console.log(`[Store] Generated ${items.length} items in ${(performance.now() - startTime).toFixed(2)}ms`);
             const filters = loadFilters();
             const viewMode = loadViewMode();
+            const favorites = getFavorites();
 
             set({
                 items,
                 filters,
                 viewMode,
+                favorites,
                 isLoading: false,
             });
             console.log('[Store] State updated with items');
@@ -183,6 +197,22 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
 
     clearCart: () => {
         set({ cart: [] });
+    },
+
+    toggleFavorite: (productId) => {
+        const currentFavorites = get().favorites;
+        const isFavorite = currentFavorites.includes(productId);
+        let newFavorites;
+
+        if (isFavorite) {
+            newFavorites = currentFavorites.filter(id => id !== productId);
+        } else {
+            newFavorites = [...currentFavorites, productId];
+        }
+
+        // Save to storage
+        storage.set('marketplace.favorites', JSON.stringify(newFavorites));
+        set({ favorites: newFavorites });
     },
 
     setViewMode: (mode) => {

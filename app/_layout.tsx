@@ -59,7 +59,7 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.colors.background.primary }}>
       <ThemeProvider value={CustomDarkTheme}>
         <StatusBar style="light" />
         <Stack
@@ -74,7 +74,7 @@ export default function RootLayout() {
             name="detail/[id]"
             options={{
               headerShown: false,
-              animation: 'slide_from_bottom',
+              presentation: 'modal',
               gestureEnabled: true,
             }}
           />

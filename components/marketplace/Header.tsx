@@ -1,6 +1,7 @@
 import { theme } from '@/constants/theme';
 import { useFilters, useMarketplaceStore, useViewMode } from '@/store/store';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Image } from 'expo-image';
 import React, { useCallback, useMemo } from 'react';
 import {
     Pressable,
@@ -88,10 +89,11 @@ export function Header({ scrollY, itemCount, onFilterPress }: HeaderProps) {
             {/* Title Row */}
             <View style={styles.titleRow}>
                 <Animated.View style={titleStyle}>
-                    <Text style={styles.title}>Marketplace</Text>
-                    <Text style={styles.subtitle}>
-                        {itemCount.toLocaleString()} productos disponibles
-                    </Text>
+                    <Image
+                        source={require('@/assets/images/logo/logo_zubale_2023.png')}
+                        style={styles.logo}
+                        contentFit="contain"
+                    />
                 </Animated.View>
 
                 {/* Cart Button */}
@@ -156,6 +158,10 @@ export function Header({ scrollY, itemCount, onFilterPress }: HeaderProps) {
                     />
                 </Pressable>
             </View>
+
+            <Text style={[styles.subtitle, { marginLeft: 4, marginTop: 8 }]}>
+                {itemCount.toLocaleString()} productos disponibles
+            </Text>
         </Animated.View>
     );
 }
@@ -197,6 +203,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         marginBottom: theme.spacing.md,
+    },
+    logo: {
+        width: 140,
+        height: 36,
+        marginLeft: -4,
     },
     title: {
         color: theme.colors.text.primary,

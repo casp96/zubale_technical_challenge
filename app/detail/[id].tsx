@@ -32,7 +32,7 @@ export default function DetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const insets = useSafeAreaInsets();
     const scrollY = useSharedValue(0);
-    const { addToCart } = useMarketplaceStore();
+    const { addToCart, favorites, toggleFavorite } = useMarketplaceStore();
 
     const item = getItemById(id || '');
 
@@ -129,10 +129,17 @@ export default function DetailScreen() {
                 </Pressable>
             </Animated.View>
 
-            {/* Share Button */}
+            {/* Favorite Button */}
             <View style={[styles.shareButtonContainer, { top: insets.top + 8 }]}>
-                <Pressable style={styles.iconButton}>
-                    <FontAwesome name="share" size={20} color={theme.colors.text.primary} />
+                <Pressable
+                    style={styles.iconButton}
+                    onPress={() => item.id && toggleFavorite(item.id)}
+                >
+                    <FontAwesome
+                        name={favorites.includes(item.id) ? "star" : "star-o"}
+                        size={20}
+                        color={favorites.includes(item.id) ? "#FFD700" : theme.colors.text.primary}
+                    />
                 </Pressable>
             </View>
 
