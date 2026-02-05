@@ -23,7 +23,12 @@
         "backgroundColor": "#0043fc"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.caspjs.zubalechallenge",
+      "navigationBar": {
+        "backgroundColor": "#0A0A0F",
+        "barStyle": "light-content"
+      }
     },
     "web": {
       "bundler": "metro",
