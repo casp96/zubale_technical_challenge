@@ -1,14 +1,28 @@
-import { StyleSheet } from 'react-native';
+import { theme } from '@/constants/theme';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function FavoritesScreen() {
+  const insets = useSafeAreaInsets();
 
-export default function TabTwoScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/two.tsx" />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Favoritos</Text>
+        <Text style={styles.subtitle}>Tus trabajos guardados</Text>
+      </View>
+
+      <View style={styles.emptyState}>
+        <View style={styles.iconContainer}>
+          <FontAwesome name="heart-o" size={48} color={theme.colors.text.tertiary} />
+        </View>
+        <Text style={styles.emptyTitle}>Sin favoritos todavía</Text>
+        <Text style={styles.emptyText}>
+          Guarda los trabajos que te interesen para acceder a ellos fácilmente después
+        </Text>
+      </View>
     </View>
   );
 }
@@ -16,16 +30,49 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: theme.colors.background.primary,
+  },
+  header: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.subtle,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: theme.colors.text.primary,
+    fontSize: theme.typography.sizes['3xl'],
+    fontWeight: theme.typography.weights.bold,
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  subtitle: {
+    color: theme.colors.text.tertiary,
+    fontSize: theme.typography.sizes.sm,
+    marginTop: theme.spacing.xs,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing['3xl'],
+  },
+  iconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: theme.colors.background.tertiary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+  emptyTitle: {
+    color: theme.colors.text.primary,
+    fontSize: theme.typography.sizes.xl,
+    fontWeight: theme.typography.weights.semibold,
+    marginBottom: theme.spacing.sm,
+  },
+  emptyText: {
+    color: theme.colors.text.tertiary,
+    fontSize: theme.typography.sizes.md,
+    textAlign: 'center',
+    lineHeight: theme.typography.sizes.md * 1.5,
   },
 });
