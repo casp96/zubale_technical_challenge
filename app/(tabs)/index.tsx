@@ -44,10 +44,10 @@ export default function MarketplaceScreen() {
 
   // Initialize store on mount
   useEffect(() => {
-    // Small delay to allow initial render of loading state
-    setTimeout(() => {
-      initializeStore();
-    }, 100);
+    const init = async () => {
+      await initializeStore();
+    };
+    init();
   }, [initializeStore]);
 
   // Pull to refresh

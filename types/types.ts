@@ -16,6 +16,11 @@ export interface MarketplaceItem {
   technicalDetails?: Record<string, string>; // New field for product details
 }
 
+export interface CartItem {
+  item: MarketplaceItem;
+  quantity: number;
+}
+
 export type Category =
   | 'electronics'
   | 'clothing'

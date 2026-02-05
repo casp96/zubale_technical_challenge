@@ -21,9 +21,12 @@ export function CartDrawer() {
         cart,
         isCartOpen,
         toggleCart,
+        updateQuantity,
         removeFromCart,
         getCartTotal
     } = useMarketplaceStore();
+
+    const totalItems = cart.reduce((acc, i) => acc + i.quantity, 0);
 
     const translateX = useSharedValue(DRAWER_WIDTH);
 
@@ -58,7 +61,7 @@ export function CartDrawer() {
 
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.title}>Tu Carrito ({cart.length})</Text>
+                    <Text style={styles.title}>Tu Carrito ({totalItems})</Text>
                     <Pressable onPress={toggleCart} style={styles.closeButton}>
                         <FontAwesome name="times" size={20} color={theme.colors.text.secondary} />
                     </Pressable>
@@ -76,19 +79,37 @@ export function CartDrawer() {
                             <Text style={styles.emptySubtext}>¡Agrega productos increíbles!</Text>
                         </View>
                     ) : (
-                        cart.map((item, index) => (
-                            <View key={`${item.id}-${index}`} style={styles.cartItem}>
+                        cart.map((cartItem, index) => (
+                            <View key={`${cartItem.item.id}-${index}`} style={styles.cartItem}>
                                 <Image
-                                    source={{ uri: item.imageUrl }}
+                                    source={{ uri: cartItem.item.imageUrl }}
                                     style={styles.itemImage}
                                     contentFit="cover"
                                 />
                                 <View style={styles.itemInfo}>
-                                    <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
-                                    <Text style={styles.itemPrice}>${item.price.toFixed(0)}</Text>
+                                    <Text style={styles.itemTitle} numberOfLines={2}>{cartItem.item.title}</Text>
+                                    <View style={styles.itemPriceRow}>
+                                        <Text style={styles.itemPrice}>${cartItem.item.price.toFixed(0)}</Text>
+
+                                        <View style={styles.quantityControls}>
+                                            <Pressable
+                                                onPress={() => updateQuantity(cartItem.item.id, -1)}
+                                                style={styles.qtyButton}
+                                            >
+                                                <FontAwesome name="minus" size={12} color={theme.colors.text.secondary} />
+                                            </Pressable>
+                                            <Text style={styles.qtyText}>{cartItem.quantity}</Text>
+                                            <Pressable
+                                                onPress={() => updateQuantity(cartItem.item.id, 1)}
+                                                style={styles.qtyButton}
+                                            >
+                                                <FontAwesome name="plus" size={12} color={theme.colors.text.secondary} />
+                                            </Pressable>
+                                        </View>
+                                    </View>
                                 </View>
                                 <Pressable
-                                    onPress={() => removeFromCart(item.id)}
+                                    onPress={() => removeFromCart(cartItem.item.id)}
                                     style={styles.removeButton}
                                 >
                                     <FontAwesome name="trash-o" size={20} color={theme.colors.status.error} />
@@ -207,14 +228,43 @@ const styles = StyleSheet.create({
         fontWeight: theme.typography.weights.medium,
         marginBottom: 4,
     },
+    itemPriceRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 4,
+    },
     itemPrice: {
         color: theme.colors.accent.secondary,
         fontSize: theme.typography.sizes.md,
         fontWeight: theme.typography.weights.bold,
     },
+    quantityControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.colors.background.secondary,
+        borderRadius: theme.borderRadius.md,
+        padding: 4,
+        gap: 12,
+    },
+    qtyButton: {
+        width: 24,
+        height: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.colors.background.tertiary,
+        borderRadius: 6,
+    },
+    qtyText: {
+        color: theme.colors.text.primary,
+        fontSize: theme.typography.sizes.sm,
+        fontWeight: theme.typography.weights.bold,
+        minWidth: 16,
+        textAlign: 'center',
+    },
     removeButton: {
         justifyContent: 'center',
-        paddingHorizontal: theme.spacing.xs,
+        paddingLeft: theme.spacing.sm,
     },
     footer: {
         padding: theme.spacing.lg,

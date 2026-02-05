@@ -1,4 +1,5 @@
 import { theme } from '@/constants/theme';
+import { useMarketplaceStore } from '@/store/store';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Image } from 'expo-image';
 import React, { useState } from 'react';
@@ -7,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
     const insets = useSafeAreaInsets();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const { isLoggedIn, setIsLoggedIn } = useMarketplaceStore();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 

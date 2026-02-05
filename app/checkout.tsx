@@ -87,14 +87,14 @@ export default function CheckoutScreen() {
                 {/* Items Summary */}
                 <Text style={styles.sectionTitle}>Resumen del Pedido</Text>
                 <View style={styles.card}>
-                    {cart.map((item, index) => (
-                        <View key={`${item.id}-${index}`} style={styles.itemRow}>
-                            <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+                    {cart.map((cartItem, index) => (
+                        <View key={`${cartItem.item.id}-${index}`} style={styles.itemRow}>
+                            <Image source={{ uri: cartItem.item.imageUrl }} style={styles.itemImage} />
                             <View style={styles.itemInfo}>
-                                <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
-                                <Text style={styles.itemQty}>Cant: 1</Text>
+                                <Text style={styles.itemTitle} numberOfLines={1}>{cartItem.item.title}</Text>
+                                <Text style={styles.itemQty}>Cant: {cartItem.quantity}</Text>
                             </View>
-                            <Text style={styles.itemPrice}>${item.price.toFixed(0)}</Text>
+                            <Text style={styles.itemPrice}>${(cartItem.item.price * cartItem.quantity).toFixed(0)}</Text>
                         </View>
                     ))}
                 </View>

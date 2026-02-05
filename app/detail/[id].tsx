@@ -32,9 +32,11 @@ export default function DetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const insets = useSafeAreaInsets();
     const scrollY = useSharedValue(0);
-    const { addToCart, favorites, toggleFavorite } = useMarketplaceStore();
+    const { cart, addToCart, updateQuantity, favorites, toggleFavorite } = useMarketplaceStore();
 
     const item = getItemById(id || '');
+    const cartItem = cart.find(i => i.item.id === id);
+    const quantity = cartItem?.quantity || 0;
 
     if (!item) {
         return (
@@ -274,13 +276,36 @@ export default function DetailScreen() {
                         <Text style={styles.ctaPrice}>${item.price.toFixed(0)}</Text>
                         <Text style={styles.ctaSubtext}>Mejor precio garantizado</Text>
                     </View>
-                    <Pressable
-                        style={styles.ctaButton}
-                        onPress={() => addToCart(item)}
-                    >
-                        <Text style={styles.ctaButtonText}>Comprar Ahora</Text>
-                        <FontAwesome name="shopping-cart" size={16} color={theme.colors.text.primary} />
-                    </Pressable>
+
+                    {quantity > 0 ? (
+                        <View style={styles.quantityContainer}>
+                            <Pressable
+                                style={styles.qtyBtn}
+                                onPress={() => updateQuantity(item.id, -1)}
+                            >
+                                <FontAwesome name="minus" size={16} color={theme.colors.text.primary} />
+                            </Pressable>
+
+                            <View style={styles.qtyDisplay}>
+                                <Text style={styles.qtyText}>{quantity}</Text>
+                            </View>
+
+                            <Pressable
+                                style={styles.qtyBtn}
+                                onPress={() => updateQuantity(item.id, 1)}
+                            >
+                                <FontAwesome name="plus" size={16} color={theme.colors.text.primary} />
+                            </Pressable>
+                        </View>
+                    ) : (
+                        <Pressable
+                            style={styles.ctaButton}
+                            onPress={() => addToCart(item)}
+                        >
+                            <Text style={styles.ctaButtonText}>Comprar Ahora</Text>
+                            <FontAwesome name="shopping-cart" size={16} color={theme.colors.text.primary} />
+                        </Pressable>
+                    )}
                 </View>
             </Animated.View>
         </View>
@@ -567,6 +592,33 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.xl,
     },
     ctaButtonText: {
+        color: theme.colors.text.primary,
+        fontSize: theme.typography.sizes.lg,
+        fontWeight: theme.typography.weights.bold,
+    },
+    quantityContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.colors.background.tertiary,
+        borderRadius: theme.borderRadius.xl,
+        padding: 4,
+        borderWidth: 1,
+        borderColor: theme.colors.border.subtle,
+    },
+    qtyBtn: {
+        width: 48,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.colors.accent.primary,
+        borderRadius: theme.borderRadius.lg,
+    },
+    qtyDisplay: {
+        width: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    qtyText: {
         color: theme.colors.text.primary,
         fontSize: theme.typography.sizes.lg,
         fontWeight: theme.typography.weights.bold,

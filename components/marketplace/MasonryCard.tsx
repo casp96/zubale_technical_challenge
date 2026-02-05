@@ -1,4 +1,5 @@
 import { categoryColors, theme } from '@/constants/theme';
+import { useMarketplaceStore } from '@/store/store';
 import { CATEGORIES, MarketplaceItem } from '@/types/types';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -31,6 +32,10 @@ const getImageHeight = (index: number): number => {
 function MasonryCardComponent({ item, index, columnIndex }: MasonryCardProps) {
     const scale = useSharedValue(1);
     const imageHeight = useMemo(() => getImageHeight(index), [index]);
+
+    const quantity = useMarketplaceStore(state =>
+        state.cart.find(i => i.item.id === item.id)?.quantity || 0
+    );
 
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: scale.value }],
@@ -78,6 +83,13 @@ function MasonryCardComponent({ item, index, columnIndex }: MasonryCardProps) {
                     transition={200}
                     cachePolicy="memory-disk"
                 />
+
+                {/* Quantity Badge */}
+                {quantity > 0 && (
+                    <View style={styles.quantityBadge}>
+                        <Text style={styles.quantityBadgeText}>{quantity}</Text>
+                    </View>
+                )}
 
                 {/* Featured Badge */}
                 {item.featured && (
@@ -153,6 +165,25 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
+    quantityBadge: {
+        position: 'absolute',
+        top: theme.spacing.sm,
+        right: theme.spacing.sm,
+        backgroundColor: theme.colors.accent.secondary,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+        borderWidth: 1.5,
+        borderColor: theme.colors.text.primary,
+    },
+    quantityBadgeText: {
+        color: theme.colors.text.primary,
+        fontSize: 10,
+        fontWeight: theme.typography.weights.bold,
+    },
     featuredBadge: {
         position: 'absolute',
         top: theme.spacing.sm,
@@ -169,7 +200,7 @@ const styles = StyleSheet.create({
     },
     discountBadge: {
         position: 'absolute',
-        top: theme.spacing.sm,
+        bottom: theme.spacing.sm,
         right: theme.spacing.sm,
         backgroundColor: theme.colors.status.error,
         paddingHorizontal: theme.spacing.sm,
@@ -249,9 +280,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export const MasonryCard = memo(MasonryCardComponent, (prev, next) => {
-    return prev.item.id === next.item.id && prev.columnIndex === next.columnIndex;
-});
+export const MasonryCard = memo(MasonryCardComponent);
 
 export { getImageHeight };
 

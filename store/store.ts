@@ -1,5 +1,6 @@
 import { generateMockData } from '@/data/mockData';
 import {
+    CartItem,
     DEFAULT_FILTERS,
     FilterState,
     MarketplaceItem,
@@ -7,18 +8,22 @@ import {
 } from '@/types/types';
 import {
     getFavorites,
+    loadCart,
     loadFilters,
+    loadSession,
     loadViewMode,
+    saveCart,
+    saveFavorites,
     saveFilters,
-    saveViewMode,
-    storage
+    saveSession,
+    saveViewMode
 } from '@/utils/storage';
 import { create } from 'zustand';
 
 interface MarketplaceStore {
     // Data
     items: MarketplaceItem[];
-    cart: MarketplaceItem[]; // Cart items
+    cart: CartItem[]; // Grouped cart items
     isLoading: boolean;
 
     // Filters
@@ -29,24 +34,29 @@ interface MarketplaceStore {
     // View
     viewMode: ViewMode;
     favorites: string[]; // Favorite product IDs
+    isLoggedIn: boolean; // User session state
 
     // Actions
-    initializeStore: () => void;
-    setFilters: (filters: Partial<FilterState>) => void;
-    resetFilters: () => void;
+    initializeStore: () => Promise<void>;
+    setFilters: (filters: Partial<FilterState>) => Promise<void>;
+    resetFilters: () => Promise<void>;
     toggleFilterPanel: () => void;
     setFilterPanelOpen: (open: boolean) => void;
 
     // Cart Actions
     toggleCart: () => void;
-    addToCart: (item: MarketplaceItem) => void;
-    removeFromCart: (itemId: string) => void;
-    clearCart: () => void;
+    addToCart: (item: MarketplaceItem) => Promise<void>;
+    updateQuantity: (itemId: string, delta: number) => Promise<void>;
+    removeFromCart: (itemId: string) => Promise<void>;
+    clearCart: () => Promise<void>;
 
     // Favorite Actions
-    toggleFavorite: (productId: string) => void;
+    toggleFavorite: (productId: string) => Promise<void>;
 
-    setViewMode: (mode: ViewMode) => void;
+    // Session Actions
+    setIsLoggedIn: (isLoggedIn: boolean) => Promise<void>;
+
+    setViewMode: (mode: ViewMode) => Promise<void>;
 
     // Computed (using selectors)
     getFilteredItems: () => MarketplaceItem[];
@@ -129,42 +139,50 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
     isCartOpen: false,
     viewMode: 'masonry',
     favorites: [],
+    isLoggedIn: false,
 
     // Initialize store with data
-    initializeStore: () => {
+    initializeStore: async () => {
         console.log('[Store] Initializing...');
-        // Use setTimeout to allow UI to render first
-        setTimeout(() => {
-            const startTime = performance.now();
-            const items = generateMockData(10000);
-            console.log(`[Store] Generated ${items.length} items in ${(performance.now() - startTime).toFixed(2)}ms`);
-            const filters = loadFilters();
-            const viewMode = loadViewMode();
-            const favorites = getFavorites();
 
-            set({
-                items,
-                filters,
-                viewMode,
-                favorites,
-                isLoading: false,
-            });
-            console.log('[Store] State updated with items');
-        }, 100);
+        // Load items first
+        const startTime = performance.now();
+        const items = generateMockData(10000);
+        console.log(`[Store] Generated ${items.length} items in ${(performance.now() - startTime).toFixed(2)}ms`);
+
+        // Load persistent data in parallel
+        const [filters, viewMode, favorites, cart, isLoggedIn] = await Promise.all([
+            loadFilters(),
+            loadViewMode(),
+            getFavorites(),
+            loadCart() as Promise<CartItem[]>,
+            loadSession()
+        ]);
+
+        set({
+            items,
+            filters,
+            viewMode,
+            favorites,
+            cart,
+            isLoggedIn,
+            isLoading: false,
+        });
+        console.log('[Store] Full state restored from persistence');
     },
 
     // Update filters
-    setFilters: (newFilters) => {
+    setFilters: async (newFilters) => {
         const currentFilters = get().filters;
         const updatedFilters = { ...currentFilters, ...newFilters };
 
-        saveFilters(updatedFilters);
+        await saveFilters(updatedFilters);
         set({ filters: updatedFilters });
     },
 
     // Reset filters to default
-    resetFilters: () => {
-        saveFilters(DEFAULT_FILTERS);
+    resetFilters: async () => {
+        await saveFilters(DEFAULT_FILTERS);
         set({ filters: DEFAULT_FILTERS });
     },
 
@@ -182,41 +200,75 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
         set(state => ({ isCartOpen: !state.isCartOpen }));
     },
 
-    addToCart: (item) => {
-        set(state => ({
-            cart: [...state.cart, item],
+    addToCart: async (item) => {
+        const currentCart = get().cart;
+        const existingItem = currentCart.find(i => i.item.id === item.id);
+
+        let newCart;
+        if (existingItem) {
+            newCart = currentCart.map(i =>
+                i.item.id === item.id
+                    ? { ...i, quantity: i.quantity + 1 }
+                    : i
+            );
+        } else {
+            newCart = [...currentCart, { item, quantity: 1 }];
+        }
+
+        await saveCart(newCart);
+        set({
+            cart: newCart,
             isCartOpen: true // Auto open cart when adding
-        }));
+        });
     },
 
-    removeFromCart: (itemId) => {
-        set(state => ({
-            cart: state.cart.filter(i => i.id !== itemId)
-        }));
+    updateQuantity: async (itemId, delta) => {
+        const currentCart = get().cart;
+        const newCart = currentCart.map(i => {
+            if (i.item.id === itemId) {
+                const newQty = Math.max(0, i.quantity + delta);
+                return { ...i, quantity: newQty };
+            }
+            return i;
+        }).filter(i => i.quantity > 0);
+
+        await saveCart(newCart);
+        set({ cart: newCart });
     },
 
-    clearCart: () => {
+    removeFromCart: async (itemId) => {
+        const newCart = get().cart.filter(i => i.item.id !== itemId);
+        await saveCart(newCart);
+        set({ cart: newCart });
+    },
+
+    clearCart: async () => {
+        await saveCart([]);
         set({ cart: [] });
     },
 
-    toggleFavorite: (productId) => {
+    toggleFavorite: async (productId) => {
         const currentFavorites = get().favorites;
-        const isFavorite = currentFavorites.includes(productId);
+        const isFav = currentFavorites.includes(productId);
         let newFavorites;
 
-        if (isFavorite) {
+        if (isFav) {
             newFavorites = currentFavorites.filter(id => id !== productId);
         } else {
             newFavorites = [...currentFavorites, productId];
         }
 
-        // Save to storage
-        storage.set('marketplace.favorites', JSON.stringify(newFavorites));
+        await saveFavorites(newFavorites);
         set({ favorites: newFavorites });
     },
 
-    setViewMode: (mode) => {
-        saveViewMode(mode);
+    setIsLoggedIn: async (isLoggedIn) => {
+        await saveSession(isLoggedIn);
+        set({ isLoggedIn });
+    },
+
+    setViewMode: async (mode) => {
+        await saveViewMode(mode);
         set({ viewMode: mode });
     },
 
@@ -228,7 +280,7 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
 
     getCartTotal: () => {
         const { cart } = get();
-        return cart.reduce((total, item) => total + item.price, 0);
+        return cart.reduce((total, item) => total + (item.item.price * item.quantity), 0);
     }
 }));
 

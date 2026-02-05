@@ -1,4 +1,5 @@
 import { categoryColors, theme } from '@/constants/theme';
+import { useMarketplaceStore } from '@/store/store';
 import { CATEGORIES, MarketplaceItem } from '@/types/types';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -24,6 +25,10 @@ const BLURHASH = 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
 function ItemCardComponent({ item, index }: ItemCardProps) {
     const scale = useSharedValue(1);
     const pressed = useSharedValue(0);
+
+    const quantity = useMarketplaceStore(state =>
+        state.cart.find(i => i.item.id === item.id)?.quantity || 0
+    );
 
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: scale.value }],
@@ -80,6 +85,13 @@ function ItemCardComponent({ item, index }: ItemCardProps) {
                     transition={200}
                     cachePolicy="memory-disk"
                 />
+
+                {/* Quantity Badge */}
+                {quantity > 0 && (
+                    <View style={styles.quantityBadge}>
+                        <Text style={styles.quantityBadgeText}>{quantity}</Text>
+                    </View>
+                )}
 
                 {/* Featured Badge */}
                 {item.featured && (
@@ -158,6 +170,25 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
+    quantityBadge: {
+        position: 'absolute',
+        top: theme.spacing.sm,
+        right: theme.spacing.sm,
+        backgroundColor: theme.colors.accent.secondary,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+        borderWidth: 2,
+        borderColor: theme.colors.text.primary,
+    },
+    quantityBadgeText: {
+        color: theme.colors.text.primary,
+        fontSize: 12,
+        fontWeight: theme.typography.weights.bold,
+    },
     featuredBadge: {
         position: 'absolute',
         top: theme.spacing.sm,
@@ -174,7 +205,7 @@ const styles = StyleSheet.create({
     },
     urgentBadge: {
         position: 'absolute',
-        top: theme.spacing.sm,
+        top: 42, // Below featured/quantity
         right: theme.spacing.sm,
         backgroundColor: theme.colors.status.error,
         paddingHorizontal: theme.spacing.sm,
@@ -269,6 +300,5 @@ const styles = StyleSheet.create({
 });
 
 // Memoize component to prevent unnecessary re-renders
-export const ItemCard = memo(ItemCardComponent, (prev, next) => {
-    return prev.item.id === next.item.id;
-});
+// We don't need to manually check quantity here because Zustand selector handles it
+export const ItemCard = memo(ItemCardComponent);

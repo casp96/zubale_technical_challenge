@@ -169,7 +169,7 @@ export function Header({ scrollY, itemCount, onFilterPress }: HeaderProps) {
 // Separated component to avoid re-rendering entire header when cart changes
 function CartButton() {
     const { cart, toggleCart } = useMarketplaceStore();
-    const count = cart.length;
+    const count = cart.reduce((acc, i) => acc + i.quantity, 0);
 
     return (
         <Pressable

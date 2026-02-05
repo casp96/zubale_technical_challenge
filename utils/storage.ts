@@ -1,53 +1,34 @@
 ﻿import { DEFAULT_FILTERS, FilterState, ViewMode } from '@/types/types';
-
-// Simple in-memory storage for demo (MMKV can be used in production)
-class SimpleStorage {
-  private data: Map<string, string | number> = new Map();
-
-  set(key: string, value: string | number): void {
-    this.data.set(key, value);
-  }
-
-  getString(key: string): string | undefined {
-    const value = this.data.get(key);
-    return typeof value === 'string' ? value : undefined;
-  }
-
-  getNumber(key: string): number | undefined {
-    const value = this.data.get(key);
-    return typeof value === 'number' ? value : undefined;
-  }
-
-  delete(key: string): void {
-    this.data.delete(key);
-  }
-
-  clearAll(): void {
-    this.data.clear();
-  }
-}
-
-// Use simple storage for demo - replace with MMKV for production
-export const storage = new SimpleStorage();
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Storage keys
-const KEYS = {
+export const KEYS = {
   FILTERS: 'marketplace.filters',
   VIEW_MODE: 'marketplace.viewMode',
   LAST_SYNC: 'marketplace.lastSync',
   FAVORITES: 'marketplace.favorites',
+  CART: 'marketplace.cart',
+  SESSION: 'marketplace.session',
 } as const;
 
+// Helper to log storage operations
+const log = (op: string, key: string, value: any) => {
+  console.log(`[Storage] ${op} | ${key} |`, value);
+};
+
 // Filter persistence
-export function saveFilters(filters: FilterState): void {
-  storage.set(KEYS.FILTERS, JSON.stringify(filters));
+export async function saveFilters(filters: FilterState): Promise<void> {
+  log('SAVE', KEYS.FILTERS, 'filters updated');
+  await AsyncStorage.setItem(KEYS.FILTERS, JSON.stringify(filters));
 }
 
-export function loadFilters(): FilterState {
-  const stored = storage.getString(KEYS.FILTERS);
+export async function loadFilters(): Promise<FilterState> {
+  const stored = await AsyncStorage.getItem(KEYS.FILTERS);
   if (stored) {
     try {
-      return JSON.parse(stored) as FilterState;
+      const parsed = JSON.parse(stored) as FilterState;
+      log('LOAD', KEYS.FILTERS, 'filters loaded');
+      return parsed;
     } catch {
       return DEFAULT_FILTERS;
     }
@@ -56,20 +37,30 @@ export function loadFilters(): FilterState {
 }
 
 // View mode persistence
-export function saveViewMode(mode: ViewMode): void {
-  storage.set(KEYS.VIEW_MODE, mode);
+export async function saveViewMode(mode: ViewMode): Promise<void> {
+  log('SAVE', KEYS.VIEW_MODE, mode);
+  await AsyncStorage.setItem(KEYS.VIEW_MODE, mode);
 }
 
-export function loadViewMode(): ViewMode {
-  return (storage.getString(KEYS.VIEW_MODE) as ViewMode) || 'masonry';
+export async function loadViewMode(): Promise<ViewMode> {
+  const mode = (await AsyncStorage.getItem(KEYS.VIEW_MODE) as ViewMode) || 'masonry';
+  log('LOAD', KEYS.VIEW_MODE, mode);
+  return mode;
 }
 
-// Favorites management
-export function getFavorites(): string[] {
-  const stored = storage.getString(KEYS.FAVORITES);
+// Cart persistence
+export async function saveCart(cart: any[]): Promise<void> {
+  log('SAVE', KEYS.CART, `${cart.length} items`);
+  await AsyncStorage.setItem(KEYS.CART, JSON.stringify(cart));
+}
+
+export async function loadCart(): Promise<any[]> {
+  const stored = await AsyncStorage.getItem(KEYS.CART);
   if (stored) {
     try {
-      return JSON.parse(stored) as string[];
+      const parsed = JSON.parse(stored) as any[];
+      log('LOAD', KEYS.CART, `${parsed.length} items`);
+      return parsed;
     } catch {
       return [];
     }
@@ -77,33 +68,66 @@ export function getFavorites(): string[] {
   return [];
 }
 
-export function addFavorite(itemId: string): void {
-  const favorites = getFavorites();
+// Session persistence
+export async function saveSession(isLoggedIn: boolean): Promise<void> {
+  log('SAVE', KEYS.SESSION, isLoggedIn);
+  await AsyncStorage.setItem(KEYS.SESSION, isLoggedIn ? 'true' : 'false');
+}
+
+export async function loadSession(): Promise<boolean> {
+  const stored = await AsyncStorage.getItem(KEYS.SESSION);
+  const isLoggedIn = stored === 'true';
+  log('LOAD', KEYS.SESSION, isLoggedIn);
+  return isLoggedIn;
+}
+
+// Favorites management
+export async function getFavorites(): Promise<string[]> {
+  const stored = await AsyncStorage.getItem(KEYS.FAVORITES);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored) as string[];
+      log('LOAD', KEYS.FAVORITES, `${parsed.length} items`);
+      return parsed;
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+export async function saveFavorites(favorites: string[]): Promise<void> {
+  log('SAVE', KEYS.FAVORITES, `${favorites.length} items`);
+  await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(favorites));
+}
+
+export async function addFavorite(itemId: string): Promise<void> {
+  const favorites = await getFavorites();
   if (!favorites.includes(itemId)) {
     favorites.push(itemId);
-    storage.set(KEYS.FAVORITES, JSON.stringify(favorites));
+    await saveFavorites(favorites);
   }
 }
 
-export function removeFavorite(itemId: string): void {
-  const favorites = getFavorites().filter(id => id !== itemId);
-  storage.set(KEYS.FAVORITES, JSON.stringify(favorites));
+export async function removeFavorite(itemId: string): Promise<void> {
+  const favorites = (await getFavorites()).filter(id => id !== itemId);
+  await saveFavorites(favorites);
 }
 
-export function isFavorite(itemId: string): boolean {
-  return getFavorites().includes(itemId);
+export async function isFavorite(itemId: string): Promise<boolean> {
+  return (await getFavorites()).includes(itemId);
 }
 
 // Cache management
-export function getLastSyncTime(): number | null {
-  const value = storage.getNumber(KEYS.LAST_SYNC);
-  return value || null;
+export async function getLastSyncTime(): Promise<number | null> {
+  const value = await AsyncStorage.getItem(KEYS.LAST_SYNC);
+  return value ? parseInt(value, 10) : null;
 }
 
-export function setLastSyncTime(): void {
-  storage.set(KEYS.LAST_SYNC, Date.now());
+export async function setLastSyncTime(): Promise<void> {
+  await AsyncStorage.setItem(KEYS.LAST_SYNC, Date.now().toString());
 }
 
-export function clearCache(): void {
-  storage.clearAll();
+export async function clearCache(): Promise<void> {
+  await AsyncStorage.clear();
 }
