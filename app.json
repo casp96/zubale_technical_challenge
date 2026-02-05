@@ -2,6 +2,7 @@
   "expo": {
     "name": "zubale-challenge",
     "slug": "zubale-challenge",
+    "owner": "caspjs",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -34,6 +35,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "132da18c-515a-4c76-8579-c246dadec170"
+      }
     }
   }
 }

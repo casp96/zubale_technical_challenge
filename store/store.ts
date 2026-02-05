@@ -11,11 +11,13 @@ import {
     loadCart,
     loadFilters,
     loadSession,
+    loadUserEmail,
     loadViewMode,
     saveCart,
     saveFavorites,
     saveFilters,
     saveSession,
+    saveUserEmail,
     saveViewMode
 } from '@/utils/storage';
 import { create } from 'zustand';
@@ -35,6 +37,7 @@ interface MarketplaceStore {
     viewMode: ViewMode;
     favorites: string[]; // Favorite product IDs
     isLoggedIn: boolean; // User session state
+    userEmail: string; // Logged in user email
 
     // Actions
     initializeStore: () => Promise<void>;
@@ -55,6 +58,7 @@ interface MarketplaceStore {
 
     // Session Actions
     setIsLoggedIn: (isLoggedIn: boolean) => Promise<void>;
+    setUserEmail: (email: string) => Promise<void>;
 
     setViewMode: (mode: ViewMode) => Promise<void>;
 
@@ -140,6 +144,7 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
     viewMode: 'masonry',
     favorites: [],
     isLoggedIn: false,
+    userEmail: '',
 
     // Initialize store with data
     initializeStore: async () => {
@@ -151,12 +156,13 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
         console.log(`[Store] Generated ${items.length} items in ${(performance.now() - startTime).toFixed(2)}ms`);
 
         // Load persistent data in parallel
-        const [filters, viewMode, favorites, cart, isLoggedIn] = await Promise.all([
+        const [filters, viewMode, favorites, cart, isLoggedIn, userEmail] = await Promise.all([
             loadFilters(),
             loadViewMode(),
             getFavorites(),
             loadCart() as Promise<CartItem[]>,
-            loadSession()
+            loadSession(),
+            loadUserEmail()
         ]);
 
         set({
@@ -166,6 +172,7 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
             favorites,
             cart,
             isLoggedIn,
+            userEmail,
             isLoading: false,
         });
         console.log('[Store] Full state restored from persistence');
@@ -262,9 +269,20 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
         set({ favorites: newFavorites });
     },
 
+    // Session Actions
+    setUserEmail: async (email) => {
+        await saveUserEmail(email);
+        set({ userEmail: email });
+    },
+
     setIsLoggedIn: async (isLoggedIn) => {
         await saveSession(isLoggedIn);
-        set({ isLoggedIn });
+        if (!isLoggedIn) {
+            await saveUserEmail('');
+            set({ isLoggedIn, userEmail: '' });
+        } else {
+            set({ isLoggedIn });
+        }
     },
 
     setViewMode: async (mode) => {

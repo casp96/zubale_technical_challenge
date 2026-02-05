@@ -1,3 +1,4 @@
+import { SuccessModal } from '@/components/marketplace/SuccessModal';
 import { theme } from '@/constants/theme';
 import { useMarketplaceStore } from '@/store/store';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -6,7 +7,6 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -20,6 +20,7 @@ export default function CheckoutScreen() {
     const insets = useSafeAreaInsets();
     const { cart, getCartTotal, clearCart } = useMarketplaceStore();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     const subtotal = getCartTotal();
     const shipping = subtotal > 500 ? 0 : 50;
@@ -30,20 +31,14 @@ export default function CheckoutScreen() {
         // Simulate API call
         setTimeout(() => {
             setIsProcessing(false);
-            Alert.alert(
-                '¡Compra Exitosa!',
-                'Tu pedido ha sido procesado correctamente.',
-                [
-                    {
-                        text: 'Volver al Inicio',
-                        onPress: () => {
-                            clearCart();
-                            router.replace('/(tabs)');
-                        }
-                    }
-                ]
-            );
+            setShowSuccess(true);
         }, 2000);
+    };
+
+    const handleCloseSuccess = () => {
+        setShowSuccess(false);
+        clearCart();
+        router.replace('/(tabs)');
     };
 
     if (cart.length === 0) {
@@ -176,6 +171,11 @@ export default function CheckoutScreen() {
                     )}
                 </Pressable>
             </Animated.View>
+
+            <SuccessModal
+                visible={showSuccess}
+                onClose={handleCloseSuccess}
+            />
         </View>
     );
 }

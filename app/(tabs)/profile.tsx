@@ -8,12 +8,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
     const insets = useSafeAreaInsets();
-    const { isLoggedIn, setIsLoggedIn } = useMarketplaceStore();
+    const { isLoggedIn, setIsLoggedIn, userEmail, setUserEmail } = useMarketplaceStore();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const handleLogin = () => {
         if (email && password) {
+            setUserEmail(email);
             setIsLoggedIn(true);
         }
     };
@@ -98,7 +99,7 @@ export default function ProfileScreen() {
                     style={styles.avatar}
                 />
                 <Text style={styles.userName}>Carlos Pérez</Text>
-                <Text style={styles.userEmail}>carlos.perez@example.com</Text>
+                <Text style={styles.userEmail}>{userEmail || 'usuario@ejemplo.com'}</Text>
                 <View style={styles.badge}>
                     <Text style={styles.badgeText}>Miembro Gold</Text>
                 </View>

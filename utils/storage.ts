@@ -9,6 +9,7 @@ export const KEYS = {
   FAVORITES: 'marketplace.favorites',
   CART: 'marketplace.cart',
   SESSION: 'marketplace.session',
+  USER_EMAIL: 'marketplace.userEmail',
 } as const;
 
 // Helper to log storage operations
@@ -79,6 +80,17 @@ export async function loadSession(): Promise<boolean> {
   const isLoggedIn = stored === 'true';
   log('LOAD', KEYS.SESSION, isLoggedIn);
   return isLoggedIn;
+}
+
+export async function saveUserEmail(email: string): Promise<void> {
+  log('SAVE', KEYS.USER_EMAIL, email);
+  await AsyncStorage.setItem(KEYS.USER_EMAIL, email);
+}
+
+export async function loadUserEmail(): Promise<string> {
+  const email = (await AsyncStorage.getItem(KEYS.USER_EMAIL)) || '';
+  log('LOAD', KEYS.USER_EMAIL, email);
+  return email;
 }
 
 // Favorites management
